@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Personal Projects\\\\Launcher\")",
+      "WebFetch(domain:github.com)",
+      "Bash(git --version)",
+      "Bash(java:*)",
+      "Bash(where:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git clone:*)"
+    ]
+  }
+}
