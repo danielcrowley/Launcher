@@ -1,0 +1,34 @@
+name: Build Claude branch
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+  workflow_dispatch:
+
+jobs:
+  build-debug-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-encryption-key: Da25KUVSE5jbGds2zXmfXw==
+
+      - name: Build debug APK
+        run: ./gradlew assembleLawnWithQuickstepGithubDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: debug-apk-${{ github.sha }}
+          path: build/outputs/apk/**/*.apk
+          retention-days: 7
