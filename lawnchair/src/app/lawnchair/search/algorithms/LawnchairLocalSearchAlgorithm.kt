@@ -3,7 +3,6 @@ package app.lawnchair.search.algorithms
 import android.content.Context
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
-import app.lawnchair.search.adapter.SearchLinksTarget
 import app.lawnchair.search.adapter.SearchTargetCompat
 import app.lawnchair.search.adapter.SearchTargetFactory
 import app.lawnchair.search.algorithms.engine.ActionsSectionBuilder
@@ -26,7 +25,6 @@ import app.lawnchair.search.algorithms.engine.provider.HistorySearchProvider
 import app.lawnchair.search.algorithms.engine.provider.SettingsSearchProvider
 import app.lawnchair.search.algorithms.engine.provider.ShortcutSearchProvider
 import app.lawnchair.search.algorithms.engine.provider.apps.AppSearchProvider
-import app.lawnchair.search.algorithms.engine.provider.web.CustomWebSearchProvider
 import app.lawnchair.search.algorithms.engine.provider.web.WebSuggestionProvider
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.R
@@ -130,38 +128,7 @@ class LawnchairLocalSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm
     }
 
     private fun generateActionResults(query: String): List<SearchResult.Action> {
-        val actions = mutableListOf<SearchResult.Action>()
-        val prefs = PreferenceManager.getInstance(context)
-        val prefs2 = PreferenceManager2.getInstance(context)
-
-        if (prefs.searchResultStartPageSuggestion.get()) {
-            val provider = prefs2.webSuggestionProvider.firstBlocking()
-            val webProvider = provider.configure(context)
-
-            val providerName = if (webProvider is CustomWebSearchProvider) {
-                webProvider.getDisplayName()
-            } else {
-                context.getString(webProvider.label)
-            }
-
-            actions.add(
-                SearchResult.Action.WebSearch(
-                    query = query,
-                    providerName = providerName,
-                    searchUrl = webProvider.getSearchUrl(query),
-                    providerIconRes = webProvider.iconRes,
-                    tintIcon = webProvider is CustomWebSearchProvider,
-                ),
-            )
-        }
-
-        if (SearchLinksTarget.resolveMarketSearchActivity(context) != null) {
-            actions.add(SearchResult.Action.MarketSearch(query = query))
-        }
-
-        actions.add(SearchResult.Action.SearchSettings)
-
-        return actions
+        return listOf(SearchResult.Action.SearchSettings)
     }
 
     private val sectionBuilders: List<SectionBuilder> = listOf(
