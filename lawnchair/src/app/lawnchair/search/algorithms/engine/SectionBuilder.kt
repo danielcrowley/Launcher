@@ -72,7 +72,6 @@ data object SettingsSectionBuilder : SectionBuilder {
         }
 
         val targets = mutableListOf<SearchTargetCompat>()
-        targets.add(factory.createHeaderTarget(context.getString(R.string.all_apps_search_result_settings_entry_from_device)))
         targets.addAll(settings.mapNotNull { factory.createSettingsTarget(it.data) })
         targets.add(factory.createHeaderTarget(SPACE))
         return targets
@@ -109,9 +108,6 @@ data object WebSuggestionsSectionBuilder : SectionBuilder {
         }
 
         val targets = mutableListOf<SearchTargetCompat>()
-        val suggestionsHeader =
-            factory.createHeaderTarget(context.getString(R.string.all_apps_search_result_suggestions))
-        targets.add(suggestionsHeader)
         targets.addAll(
             webSuggestions.map {
                 factory.createWebSuggestionsTarget(
@@ -158,31 +154,7 @@ data object ActionsSectionBuilder : SectionBuilder {
         context: Context,
         factory: SearchTargetFactory,
         results: List<SearchResult>,
-    ): List<SearchTargetCompat> {
-        val marketSearch = results.filterIsInstance<SearchResult.Action.MarketSearch>()
-        val webSearch = results.filterIsInstance<SearchResult.Action.WebSearch>()
-
-        val targets = mutableListOf<SearchTargetCompat>()
-
-        if (marketSearch.isNotEmpty()) {
-            factory.createMarketSearchTarget(marketSearch.first().query)?.let {
-                targets.add(it)
-            }
-        }
-        if (webSearch.isNotEmpty()) {
-            factory.createWebSearchActionTarget(
-                query = webSearch.first().query,
-                providerName = webSearch.first().providerName,
-                searchUrl = webSearch.first().searchUrl,
-                providerIconRes = webSearch.first().providerIconRes,
-                tintIcon = webSearch.first().tintIcon,
-            ).let {
-                targets.add(it)
-            }
-        }
-        targets.add(factory.createHeaderTarget(SPACE))
-        return targets
-    }
+    ): List<SearchTargetCompat> = emptyList()
 }
 
 data object AppsAndShortcutsSectionBuilder : SectionBuilder {
