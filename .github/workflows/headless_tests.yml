@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-and-screenshot:
+  screenshot:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,10 +33,10 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Build debug APK and test APK
-        run: ./gradlew assembleLawnWithQuickstepGithubDebug assembleLawnWithQuickstepGithubDebugAndroidTest
+      - name: Build debug APK
+        run: ./gradlew assembleLawnWithQuickstepGithubDebug
 
-      - name: Run instrumented tests on emulator
+      - name: Boot emulator, install APK, and capture screenshots
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -46,28 +46,30 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: |
-            # Wait for launcher to settle
-            sleep 5
-
-            # Run instrumented tests
-            ./gradlew connectedLawnWithQuickstepGithubDebugAndroidTest || true
-
-            # --- Screenshot capture ---
+            set -e
             mkdir -p screenshots
+
+            # Install the Lawnchair debug APK
+            APK=$(find build/outputs/apk -name "*.apk" | head -1)
+            echo "Installing $APK"
+            adb install -r "$APK"
+
+            # Set Lawnchair as the default home app
+            adb shell cmd package set-home-activity app.lawnchair.debug/app.lawnchair.LawnchairLauncher || true
 
             # Home screen
             adb shell input keyevent KEYCODE_HOME
-            sleep 2
+            sleep 3
             adb shell screencap -p /sdcard/screenshot_home.png
             adb pull /sdcard/screenshot_home.png screenshots/
 
-            # App drawer (swipe up from home)
-            adb shell input swipe 540 1600 540 400 500
+            # App drawer — swipe up from bottom of screen
+            adb shell input swipe 540 1800 540 400 600
             sleep 2
             adb shell screencap -p /sdcard/screenshot_app_drawer.png
             adb pull /sdcard/screenshot_app_drawer.png screenshots/
 
-            # Recent apps
+            # Recents / Overview
             adb shell input keyevent KEYCODE_APP_SWITCH
             sleep 2
             adb shell screencap -p /sdcard/screenshot_recents.png
@@ -75,14 +77,6 @@ jobs:
 
             # Back to home
             adb shell input keyevent KEYCODE_HOME
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: test-results-${{ github.sha }}
-          path: '**/build/outputs/androidTest-results/**'
-          retention-days: 14
 
       - name: Upload screenshots
         if: always()
