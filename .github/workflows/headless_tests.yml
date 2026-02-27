@@ -1,0 +1,93 @@
+name: Headless Tests & Screenshots
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test-and-screenshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-encryption-key: Da25KUVSE5jbGds2zXmfXw==
+
+      - name: Enable KVM for hardware acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Build debug APK and test APK
+        run: ./gradlew assembleLawnWithQuickstepGithubDebug assembleLawnWithQuickstepGithubDebugAndroidTest
+
+      - name: Run instrumented tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            # Wait for launcher to settle
+            sleep 5
+
+            # Run instrumented tests
+            ./gradlew connectedLawnWithQuickstepGithubDebugAndroidTest || true
+
+            # --- Screenshot capture ---
+            mkdir -p screenshots
+
+            # Home screen
+            adb shell input keyevent KEYCODE_HOME
+            sleep 2
+            adb shell screencap -p /sdcard/screenshot_home.png
+            adb pull /sdcard/screenshot_home.png screenshots/
+
+            # App drawer (swipe up from home)
+            adb shell input swipe 540 1600 540 400 500
+            sleep 2
+            adb shell screencap -p /sdcard/screenshot_app_drawer.png
+            adb pull /sdcard/screenshot_app_drawer.png screenshots/
+
+            # Recent apps
+            adb shell input keyevent KEYCODE_APP_SWITCH
+            sleep 2
+            adb shell screencap -p /sdcard/screenshot_recents.png
+            adb pull /sdcard/screenshot_recents.png screenshots/
+
+            # Back to home
+            adb shell input keyevent KEYCODE_HOME
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-results-${{ github.sha }}
+          path: '**/build/outputs/androidTest-results/**'
+          retention-days: 14
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: screenshots-${{ github.sha }}
+          path: screenshots/
+          retention-days: 14
