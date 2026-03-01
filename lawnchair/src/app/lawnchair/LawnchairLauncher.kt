@@ -35,6 +35,7 @@ import app.lawnchair.LawnchairApp.Companion.showQuickstepWarningIfNecessary
 import app.lawnchair.compat.LawnchairQuickstepCompat
 import app.lawnchair.data.AppDatabase
 import app.lawnchair.data.wallpaper.service.WallpaperService
+import app.lawnchair.overlay.DelayedUnlockOverlay
 import app.lawnchair.gestures.GestureController
 import app.lawnchair.gestures.VerticalSwipeTouchController
 import app.lawnchair.gestures.config.GestureHandlerConfig
@@ -69,6 +70,7 @@ import com.android.launcher3.uioverrides.states.OverviewState
 import com.android.launcher3.util.ActivityOptionsWrapper
 import com.android.launcher3.util.Executors
 import com.android.launcher3.util.RunnableList
+import com.android.launcher3.util.ScreenOnTracker
 import com.android.launcher3.util.SystemUiController.UI_STATE_BASE_WINDOW
 import com.android.launcher3.util.Themes
 import com.android.launcher3.util.TouchController
@@ -151,6 +153,13 @@ class LawnchairLauncher : QuickstepLauncher() {
     private var hasBackGesture = false
 
     val gestureController by unsafeLazy { GestureController(this) }
+
+    private val unlockListener = object : ScreenOnTracker.ScreenOnListener {
+        override fun onScreenOnChanged(isOn: Boolean) {}
+        override fun onUserPresent() {
+            startActivity(DelayedUnlockOverlay.createIntent(this@LawnchairLauncher))
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         layoutInflater.factory2 = LawnchairLayoutFactory(this)
@@ -245,6 +254,8 @@ class LawnchairLauncher : QuickstepLauncher() {
         reloadIconsIfNeeded()
 
         AppDatabase.INSTANCE.get(this).checkpointSync()
+
+        ScreenOnTracker.INSTANCE.get(this).addListener(unlockListener)
     }
 
     override fun collectStateHandlers(out: MutableList<StateHandler<LauncherState>>) {
@@ -460,6 +471,7 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     override fun onDestroy() {
         super.onDestroy()
+        ScreenOnTracker.INSTANCE.get(this).removeListener(unlockListener)
         // Only actually closes if required, safe to call if not enabled
         SmartspacerClient.close()
     }

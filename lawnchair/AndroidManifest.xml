@@ -79,6 +79,14 @@
             android:theme="@style/Theme.Transparent" />
 
         <activity
+            android:name="app.lawnchair.overlay.DelayedUnlockOverlay"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:theme="@style/Theme.Lawnchair"
+            android:turnScreenOn="true" />
+
+        <activity
             android:name="app.lawnchair.smartspace.SmartspacePreferencesShortcut"
             android:theme="@style/Theme.Transparent" />
 

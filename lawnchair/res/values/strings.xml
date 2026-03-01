@@ -953,4 +953,12 @@
     <string name="grant_requested_permissions_tap">Tap to grant permissions</string>
     <!-- Message shown when all home screen views are removed -->
     <string name="home_screen_all_views_removed_msg">Home screen cleared</string>
+
+    <!-- Delayed unlock overlay strings -->
+    <string name="unlock_screen_title">Today\'s Tasks</string>
+    <string name="unlock_screen_subtitle">Review your tasks before diving in</string>
+    <string name="unlock_countdown_format">Opening in %ds…</string>
+    <string name="unlock_countdown_done">Opening…</string>
+    <string name="todo_add_task_title">Add Task</string>
+    <string name="todo_hint_task_title">Task title</string>
 </resources>
