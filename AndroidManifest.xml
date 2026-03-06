@@ -38,6 +38,15 @@
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- Intention Launcher: network access for Google Tasks + Calendar APIs -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Required to access Google accounts on-device for OAuth -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <!-- Required so Gemini Nano can see installed apps to suggest them -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <application
         android:name="app.lawnchair.LawnchairApp"
         android:backupAgent="com.android.launcher3.LauncherBackupAgent"
@@ -83,6 +92,32 @@
                 android:name="com.android.launcher3.grid.control"
                 android:value="${packageName}.grid_control" />
         </activity>
+
+        <!--
+            Intention Launcher: Mandatory 20-second pause screen.
+            Shown on every unlock when no valid intention session exists.
+            Back is suppressed in code; pressing Home returns to LawnchairLauncher which
+            re-routes here if the session is still invalid.
+        -->
+        <activity
+            android:name="app.lawnchair.intention.IntentionLockActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!--
+            Intention Launcher: Intention input + AI app grid.
+            Shown after the 20-second countdown finishes.
+        -->
+        <activity
+            android:name="app.lawnchair.intention.IntentionInputActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity android:name="com.android.launcher3.widgetpicker.WidgetPickerActivity"
             android:theme="@style/WidgetPickerActivityTheme"

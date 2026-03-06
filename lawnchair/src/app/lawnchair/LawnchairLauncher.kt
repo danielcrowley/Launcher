@@ -34,6 +34,8 @@ import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairApp.Companion.showQuickstepWarningIfNecessary
 import app.lawnchair.compat.LawnchairQuickstepCompat
 import app.lawnchair.data.AppDatabase
+import app.lawnchair.intention.IntentionLockActivity
+import app.lawnchair.intention.IntentionSessionManager
 import app.lawnchair.data.wallpaper.service.WallpaperService
 import app.lawnchair.gestures.GestureController
 import app.lawnchair.gestures.VerticalSwipeTouchController
@@ -438,6 +440,16 @@ class LawnchairLauncher : QuickstepLauncher() {
     override fun onResume() {
         super.onResume()
         restartIfPending()
+
+        // ── Intention gate ──────────────────────────────────────────────────
+        // Every time the launcher comes to the foreground (including after a Home press while the
+        // lock screen or intention input is showing), re-check if the user has a valid session.
+        // If not, redirect to the lock screen. This makes the 20 s countdown impossible to skip
+        // by pressing Home, and enforces the intention flow on every new unlock cycle.
+        if (!IntentionSessionManager.hasValidSession()) {
+            startActivity(IntentionLockActivity.newIntent(this))
+            return
+        }
 
         dragLayer.viewTreeObserver.addOnDrawListener(
             object : ViewTreeObserver.OnDrawListener {

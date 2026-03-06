@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import app.lawnchair.backup.LawnchairBackup
 import app.lawnchair.flowerpot.Flowerpot
+import app.lawnchair.intention.receiver.ScreenStateReceiver
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.ui.ModalBottomSheetContent
 import app.lawnchair.ui.preferences.destinations.openAppInfo
@@ -64,11 +65,21 @@ class LawnchairApp : Application() {
     internal var accessibilityService: LawnchairAccessibilityService? = null
     val isVibrateOnIconAnimation: Boolean by unsafeLazy { getSystemUiBoolean("config_vibrateOnIconAnimation", false) }
 
+    private val screenStateReceiver = ScreenStateReceiver()
+
     override fun onCreate() {
         super.onCreate()
         instance = this
         QuickStepContract.sRecentsDisabled = !recentsEnabled
         Flowerpot.Manager.getInstance(this)
+
+        // Register dynamically — ACTION_SCREEN_OFF / USER_PRESENT cannot use static receivers.
+        registerReceiver(screenStateReceiver, ScreenStateReceiver.INTENT_FILTER)
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        unregisterReceiver(screenStateReceiver)
     }
 
     fun hideClockInStatusBar() {

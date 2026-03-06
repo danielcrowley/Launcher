@@ -487,6 +487,16 @@ dependencies {
     implementation libs.google.guava
 
     debugImplementation libs.leakcanary.android
+
+    // Intention Launcher — Google integrations
+    implementation libs.google.play.services.auth
+    implementation libs.google.api.client.android
+    implementation libs.google.api.services.tasks
+    implementation libs.google.api.services.calendar
+    implementation libs.google.http.client.gson
+
+    // Intention Launcher — on-device AI (Gemini Nano, requires AICore service on Pixel 6+/Android 14+)
+    implementation libs.google.ai.edge.aicore
 }
 
 ksp {
